@@ -1,0 +1,28 @@
+name: Sync to Gitee
+
+on:
+  push:
+    branches:
+      - master  # 当 GitHub master 分支有更新时触发
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout GitHub repository
+        uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+
+      - name: Set Git config
+        run: |
+          git config --global user.name "wuwweizn"
+          git config --global user.email "wuweizhineng@163.com"
+
+      - name: Add Gitee remote
+        run: |
+          git remote add gitee https://oauth2:${{ secrets.GITEE_TOKEN }}@gitee.com/wuwzn/version.git
+
+      - name: Force push to Gitee
+        run: |
+          git push gitee master --force
