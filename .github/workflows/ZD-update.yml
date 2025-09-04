@@ -1,0 +1,41 @@
+name: Safe Sync Version Repo
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '0 3 * * *'
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout your fork
+        uses: actions/checkout@v5
+        with:
+          repository: wuwweizn/version
+          ref: master
+          token: ${{ secrets.GITHUB_TOKEN }}
+          fetch-depth: 0
+
+      - name: Add upstream remote
+        run: |
+          git remote add upstream https://github.com/home-assistant/version.git || echo "upstream exists"
+          git fetch upstream
+
+      - name: Merge upstream excluding workflows
+        run: |
+          git checkout master
+          # 创建临时分支用于合并
+          git checkout -b temp-upstream upstream/master
+          # 删除 workflows 文件夹
+          git rm -r --cached .github/workflows || true
+          git commit -m "Remove workflows from temp-upstream" || true
+          # 切回主分支
+          git checkout master
+          # 合并 temp-upstream
+          git merge temp-upstream --allow-unrelated-histories --strategy-option=theirs || true
+          # 删除临时分支
+          git branch -D temp-upstream
+
+      - name: Push changes to your fork
+        run: git push origin master
