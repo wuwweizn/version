@@ -1,10 +1,9 @@
-name: Sync Fork with Upstream (version)
+name: Sync Fork with Upstream (wuwweizn/version)
 
 on:
   schedule:
-    - cron: '0 18 * * *'   # 每天 02:00 (UTC)
-  workflow_dispatch:       # 手动触发
-
+    - cron: '0 18 * * *'   # 每天北京时间 02:00 (UTC 18:00)
+  workflow_dispatch:        # 支持手动触发
 
 permissions:
   contents: write
@@ -13,11 +12,13 @@ jobs:
   sync:
     runs-on: ubuntu-latest
     steps:
+      # 1️⃣ Checkout fork
       - name: Checkout your fork
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
 
+      # 2️⃣ 配置 Git 并备份自定义 workflow 文件
       - name: Set up Git
         run: |
           git config --global user.name "github-actions[bot]"
@@ -25,11 +26,13 @@ jobs:
           cp .github/workflows/ZD-update.yml /tmp/
           cp .github/workflows/sync-to-gitee.yml /tmp/
 
+      # 3️⃣ 添加上游仓库并抓取最新代码
       - name: Add upstream and fetch
         run: |
-          git remote add upstream https://github.com/home-assistant/version.git
+          git remote add upstream https://github.com/home-assistant/version.git || echo "Upstream exists"
           git fetch upstream
 
+      # 4️⃣ 同步 master 分支
       - name: Sync master branch
         run: |
           git checkout master
@@ -40,6 +43,7 @@ jobs:
           git add .github/workflows/ZD-update.yml .github/workflows/sync-to-gitee.yml
           git commit -m "Restore custom workflows" || echo "Nothing to commit"
 
+      # 5️⃣ 推送更新回 fork
       - name: Push updates
         env:
           GH_PAT: ${{ secrets.GH_PAT }}
