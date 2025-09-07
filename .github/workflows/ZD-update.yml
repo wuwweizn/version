@@ -19,7 +19,7 @@ jobs:
           fetch-depth: 0
 
       # 2️⃣ 配置 Git 并备份自定义 workflow 文件
-      - name: Set up Git
+      - name: Set up Git and backup workflows
         run: |
           git config --global user.name "github-actions[bot]"
           git config --global user.email "github-actions[bot]@users.noreply.github.com"
@@ -29,14 +29,18 @@ jobs:
       # 3️⃣ 添加上游仓库并抓取最新代码
       - name: Add upstream and fetch
         run: |
-          git remote add upstream https://github.com/home-assistant/version.git || echo "Upstream exists"
+          git remote add upstream https://github.com/home-assistant/version.git || echo "Upstream already exists"
           git fetch upstream
 
-      # 4️⃣ 同步 master 分支
+      # 4️⃣ 同步 master 分支并恢复 workflow 文件
       - name: Sync master branch
         run: |
           git checkout master
-          git merge --ff-only upstream/master || echo "Already up to date"
+          echo "===== Upstream latest commit ====="
+          git log upstream/master -1
+          echo "===== Local master latest commit ====="
+          git log -1
+          git merge upstream/master --no-ff -m "Merge upstream master" || echo "Nothing to merge"
           mkdir -p .github/workflows
           cp -f /tmp/ZD-update.yml .github/workflows/ZD-update.yml
           cp -f /tmp/sync-to-gitee.yml .github/workflows/sync-to-gitee.yml
