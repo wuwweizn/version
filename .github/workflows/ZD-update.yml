@@ -50,7 +50,7 @@ jobs:
       # 5️⃣ 推送更新回 fork
       - name: Push updates
         env:
-          GH_PAT: ${{ secrets.GH_PAT }}
+          GH_PAT: ${{ secrets.GH_PAT1 }}
         run: |
-          git remote set-url origin https://${GH_PAT}@github.com/wuwweizn/version.git
+          git remote set-url origin https://${GH_PAT1}@github.com/wuwweizn/version.git
           git push origin master --force
